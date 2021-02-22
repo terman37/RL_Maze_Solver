@@ -1,0 +1,33 @@
+
+### Python ###
+*.pyc
+.cache/
+*.egg-info/
+.eggs/
+__pycache__
+
+### PyCharm ###
+.idea
+
+### VsCode ###
+.vscode
+.vs
+debug
+
+### Datas ###
+*data
+
+### Notebooks ###
+.ipynb_checkpoints
+
+### Logs ###
+*.log*
+logs
+
+### Tests ###
+.pytest_cache
+.tox
+
+### Virtual Envs ###
+_venv*
+.venv*
