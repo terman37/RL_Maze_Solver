@@ -1,0 +1,5 @@
+numba==0.52.0
+numpy==1.19.5
+Pillow==8.1.0
+pygame==2.0.1
+
