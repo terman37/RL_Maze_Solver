@@ -49,8 +49,8 @@ class Environment():
         # init app screen
         self.screen = pg.display.set_mode((int(self.rFactor * self.originalImgSize[0]+100),
                                            int(self.rFactor * self.originalImgSize[1]+100)))
-        self.screen.fill([127, 127, 127])
-        pg.display.set_caption('Maze Solver using QLearning')
+        self.screen.fill([227, 227, 227])
+        pg.display.set_caption('Maze Solver using Naive QLearning')
 
         # refresh
         pg.display.flip()
@@ -68,7 +68,7 @@ class Environment():
         pg.display.flip()
 
     def displayText(self, text):
-        pg.draw.rect(self.screen, (127, 127, 127), (50, 10, 200, 30))
+        pg.draw.rect(self.screen, (227, 227, 227), (50, 10, 200, 30))
         myfont = pg.font.Font(pg.font.get_default_font(), 20)
         text_surface = myfont.render(text, True, (0, 0, 0))
         self.screen.blit(text_surface, (55, 15))

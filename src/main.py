@@ -29,7 +29,7 @@ def training(epochsNb, rewardBoard):
 
 
 # Initial state
-mazePath = './maze_pictures/20x30maze.png'
+mazePath = './maze_pictures/20x20maze2.png'
 env = Environment(mazePath)
 env.displayMaze()
 env.displayText('Training...')
