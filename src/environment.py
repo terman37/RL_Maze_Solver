@@ -10,7 +10,6 @@ class Environment():
 
         self.loadMaze()
         self.initDisplay()
-        self.initRewardBoard()
 
     def loadMaze(self):
         # load file and convert it to bilevel
@@ -31,8 +30,7 @@ class Environment():
                 mazeArray[row, col] = npImg[row * 8, col * 8]
 
         self.startPos = (0, np.where(mazeArray[0] == 1)[0][0])
-        self.finishPos = (
-            mazeArray.shape[0]-1, np.where(mazeArray[mazeArray.shape[0]-1] == 1)[0][0])
+        self.finishPos = (mazeArray.shape[0]-1, np.where(mazeArray[mazeArray.shape[0]-1] == 1)[0][0])
         mazeArray[self.finishPos] = 2
         self.maze = mazeArray.astype('int32')
 
@@ -43,8 +41,7 @@ class Environment():
 
         self.rFactor = 1
         if self.originalImgSize[0] > maxWidth or self.originalImgSize[1] > maxHeight:
-            self.rFactor = round(
-                min(maxWidth/self.originalImgSize[0], maxHeight/self.originalImgSize[1]), 2)
+            self.rFactor = round(min(maxWidth/self.originalImgSize[0], maxHeight/self.originalImgSize[1]), 2)
 
         # init app screen
         self.screen = pg.display.set_mode((int(self.rFactor * self.originalImgSize[0]+100),
@@ -57,11 +54,10 @@ class Environment():
 
     def displayMaze(self):
         # simplified maze (rescaled for display)
-        colors = np.array(
-            [[0, 0, 0], [255, 255, 255], [0, 255, 0], [127, 255, 255]])
+        # 0=walls (black), 1=allowed (white), 2=finish (green), 3=solution path (light blue)
+        colors = np.array([[0, 0, 0], [255, 255, 255], [0, 255, 0], [127, 255, 255]])
         surface = pg.surfarray.make_surface(colors[np.transpose(self.maze)])
-        surface = pg.transform.scale(surface, tuple(
-            int(i * self.rFactor) for i in self.originalImgSize))
+        surface = pg.transform.scale(surface, tuple(int(i * self.rFactor) for i in self.originalImgSize))
         self.screen.blit(surface, (50, 50))
 
         # refresh
@@ -76,47 +72,11 @@ class Environment():
         # refresh
         pg.display.flip()
 
-    def initRewardBoard(self):
-
-        # Rewards:
-        # wall = move not allowed =0
-        # living penalty = -3
-        # finish reward = 1000
-        # no move living penalty = -100
-
-        self.rewards = [0, -3, 1000, -100]
-        self.rewardBoard = np.zeros(
-            (self.mazeRowNb*self.mazeColNb, self.mazeRowNb*self.mazeColNb))
-
-        for row in range(self.mazeRowNb):
-            for col in range(self.mazeColNb):
-                fromPos = self.mazeColNb * row + col
-                # if not a wall
-                if self.maze[row, col] != 0:
-                    # move left
-                    if col > 0:
-                        toPos = (self.mazeColNb) * row + (col-1)
-                        self.rewardBoard[fromPos,
-                                         toPos] = self.rewards[self.maze[row, col-1]]
-                    # move right
-                    if col < self.mazeColNb-1:
-                        toPos = (self.mazeColNb) * row + (col+1)
-                        self.rewardBoard[fromPos,
-                                         toPos] = self.rewards[self.maze[row, col+1]]
-                    # move up
-                    if row > 0:
-                        toPos = self.mazeColNb * (row-1) + col
-                        self.rewardBoard[fromPos,
-                                         toPos] = self.rewards[self.maze[row-1, col]]
-                    # move down
-                    if row < self.mazeRowNb-1:
-                        toPos = self.mazeColNb * (row+1) + col
-                        self.rewardBoard[fromPos,
-                                         toPos] = self.rewards[self.maze[row+1, col]]
-                    # no move
-                        # self.rewardBoard[fromPos, fromPos] = self.rewards[3]
-
     def moveInMaze(self, nextPos):
-        self.maze[nextPos // self.mazeColNb, nextPos % self.mazeColNb] = 3
+        self.maze[nextPos] = 3
         self.displayMaze()
         pg.time.wait(50)
+
+    def wait_and_quit(self):
+        pg.time.wait(1000)
+        return False
