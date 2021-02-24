@@ -1,63 +1,106 @@
 import numpy as np
 from environment import Environment
-import pygame as pg
 from numba import jit
 from time import time
+import argparse
 
 
 @jit(nopython=True)
-def training(epochsNb, rewardBoard):
+def initRewardBoard(maze):
+    # Rewards:
+    rewards = [0, -3, 1000]
+    # wall = move not allowed =0
+    # living penalty = -3
+    # finish reward = 1000
+
+    rowNb = maze.shape[0]
+    colNb = maze.shape[1]
+    rb = np.zeros((rowNb, colNb, 4))
+
+    for row in range(rowNb):
+        for col in range(colNb):
+            # if not a wall
+            # directions: 0=up, 1=down, 2=left, 3=right
+            if maze[row, col] != 0:
+                if row > 0:
+                    rb[row, col, 0] = rewards[maze[row-1, col]]
+                if row < rowNb-1:
+                    rb[row, col, 1] = rewards[maze[row+1, col]]
+                if col > 0:
+                    rb[row, col, 2] = rewards[maze[row, col-1]]
+                if col < colNb-1:
+                    rb[row, col, 3] = rewards[maze[row, col+1]]
+    return rb
+
+
+@jit(nopython=True)
+def getDestination(position, direction):
+    if direction == 0:  # up
+        destination = position[0]-1, position[1]
+    if direction == 1:  # down
+        destination = position[0]+1, position[1]
+    if direction == 2:  # left
+        destination = position[0], position[1]-1
+    if direction == 3:  # right
+        destination = position[0], position[1]+1
+    return destination
+
+
+@jit(nopython=True)
+def training(epochsNb, maze, rb):
     # Algorithm parameters
     gamma = 0.9
     alpha = 0.75
     # Allowed positions on board
-    allowedPos = np.where(rewardBoard.sum(axis=0) != 0)[0]
-    qTable = rewardBoard.copy()
+    allowedPos = np.where(maze != 0)
+    qTable = rb.copy()
     for _ in range(epochsNb):
         # select a random allowed position
-        startingPos = np.random.choice(allowedPos)
-        # possible destinations
-        possibleDest = np.where(rewardBoard[startingPos] != 0)[0]
+        idx = np.random.randint(0, len(allowedPos[0]))
+        startingPos = allowedPos[0][idx], allowedPos[1][idx]
+        # possible directions
+        possibleDirections = rb[startingPos].nonzero()[0]
         # play a random action
-        destPos = np.random.choice(possibleDest)
-        reward = rewardBoard[startingPos][destPos]
+        selectedDirection = np.random.choice(possibleDirections)
+        DestinationPos = getDestination(startingPos, selectedDirection)
         # update QValue
-        maxQValue = qTable[destPos][qTable[destPos].nonzero()].max()
-        TempDiff = reward + gamma * maxQValue - qTable[startingPos][destPos]
-        qTable[startingPos][destPos] += alpha * TempDiff
+        reward = rb[startingPos][selectedDirection]
+        maxQValue = qTable[DestinationPos][qTable[DestinationPos].nonzero()].max()
+        TempDiff = reward + gamma * maxQValue - qTable[startingPos][selectedDirection]
+        qTable[startingPos][selectedDirection] += alpha * TempDiff
     return qTable
 
 
-# Initial state
-mazePath = './maze_pictures/20x20maze2.png'
+# Cmd line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--mazefilepath', type=str, default='./maze_pictures/20x20maze.png', help='path to maze file')
+args = parser.parse_args()
+
+# Load Environment
+mazePath = args.mazefilepath
 env = Environment(mazePath)
 env.displayMaze()
-env.displayText('Training...')
 
 # Training
+env.displayText('Training...')
 tstart = time()
-qTable = training(epochsNb=2000000, rewardBoard=env.rewardBoard)
+rewardBoard = initRewardBoard(env.maze)
+qTable = training(epochsNb=10000000, maze=env.maze, rb=rewardBoard)
 tfinish = time()
 print("Training Duration %.2f secs" % (tfinish-tstart))
 
 # Showing solution
 env.displayText('Showing solution')
 
-startPos = env.startPos[0] * env.mazeColNb + env.startPos[1]
-finishPos = env.finishPos[0] * env.mazeColNb + env.finishPos[1]
-currentPos = startPos
+currentPos = env.startPos
 env.moveInMaze(currentPos)
-
 
 running = True
 while running:
-    if currentPos != finishPos:
-        action = np.where(qTable[currentPos] == qTable[currentPos][qTable[currentPos].nonzero()].max())[0][0]
-        currentPos = action
+    if currentPos != env.finishPos:
+        direction = np.argmax(np.where(qTable[currentPos] != 0, qTable[currentPos], -np.inf))
+        currentPos = getDestination(currentPos, direction)
         env.moveInMaze(currentPos)
     else:
         env.displayText('Tada !')
-
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            running = False
+        running = env.wait_and_quit()
