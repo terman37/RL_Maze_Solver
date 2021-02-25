@@ -72,7 +72,7 @@ class Environment():
         # refresh
         pg.display.flip()
 
-    def moveInMaze(self, nextPos):
+    def displayMove(self, nextPos):
         self.maze[nextPos] = 3
         self.displayMaze()
         pg.time.wait(50)

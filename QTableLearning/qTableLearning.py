@@ -1,5 +1,5 @@
 import numpy as np
-from environment import Environment
+from QTableLearning.environment import Environment
 from numba import jit
 from time import time
 import argparse
@@ -8,10 +8,10 @@ import argparse
 @jit(nopython=True)
 def initRewardBoard(maze):
     # Rewards:
-    rewards = [0, -3, 1000]
+    rewards = [0, -0.03, 1]
     # wall = move not allowed =0
-    # living penalty = -3
-    # finish reward = 1000
+    # living penalty = -0.03
+    # finish reward = 1
 
     rowNb = maze.shape[0]
     colNb = maze.shape[1]
@@ -73,7 +73,7 @@ def training(epochsNb, maze, rb):
 
 # Cmd line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--mazefilepath', type=str, default='./maze_pictures/20x20maze.png', help='path to maze file')
+parser.add_argument('--mazefilepath', type=str, default='../maze_pictures/20x20maze.png', help='path to maze file')
 args = parser.parse_args()
 
 # Load Environment
@@ -93,14 +93,14 @@ print("Training Duration %.2f secs" % (tfinish-tstart))
 env.displayText('Showing solution')
 
 currentPos = env.startPos
-env.moveInMaze(currentPos)
+env.displayMove(currentPos)
 
 running = True
 while running:
     if currentPos != env.finishPos:
         direction = np.argmax(np.where(qTable[currentPos] != 0, qTable[currentPos], -np.inf))
         currentPos = getDestination(currentPos, direction)
-        env.moveInMaze(currentPos)
+        env.displayMove(currentPos)
     else:
         env.displayText('Tada !')
         running = env.wait_and_quit()
