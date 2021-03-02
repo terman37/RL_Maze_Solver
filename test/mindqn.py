@@ -109,8 +109,8 @@ def main():
         done = False
         while not done:
             steps_to_update_target_model += 1
-            # if True:
-                # env.render()
+            if True:
+                env.render()
 
             random_number = np.random.rand()
             # 2. Explore using the Epsilon Greedy Exploration Strategy

@@ -2,7 +2,7 @@ from PIL import Image
 import numpy as np
 
 UP, DOWN, LEFT, RIGHT = 0, 1, 2, 3
-WALL, FREE, VISITED, FINISH = 0, 1, 2, 9
+WALL, FREE, VISITED, FINISH, CURRENTPOS = 0, 1, 2, 9, 3
 ONGOING, WIN = 0, 1
 
 
@@ -60,7 +60,9 @@ class Maze():
         else:
             nextPos = self.currentPos
 
-        self.markVisited(nextPos)
+        self.markVisited(self.currentPos)
+        self.markCurrentCell(nextPos)
+
         self.freeCellsState = self.getStateFreeCells()
         self.currentPos = nextPos
         if self.currentPos == self.finishPos:
@@ -91,6 +93,9 @@ class Maze():
     def markVisited(self, position: tuple) -> None:
         if self.maze[position] != FINISH:
             self.maze[position] = VISITED
+
+    def markCurrentCell(self, position: tuple) -> None:
+        self.maze[position] = CURRENTPOS
 
     def getFreeCells(self) -> list:
         freeCells = list()
