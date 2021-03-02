@@ -55,7 +55,7 @@ class Environment():
     def displayMaze(self):
         # simplified maze (rescaled for display)
         # 0=walls (black), 1=allowed (white), 2=finish (green), 3=solution path (light blue)
-        colors = np.array([[0, 0, 0], [255, 255, 255], [0, 255, 0], [127, 255, 255]])
+        colors = np.array([[0, 0, 0], [255, 255, 255], [0, 255, 0], [127, 127, 127]])
         surface = pg.surfarray.make_surface(colors[np.transpose(self.maze)])
         surface = pg.transform.scale(surface, tuple(int(i * self.rFactor) for i in self.originalImgSize))
         self.screen.blit(surface, (50, 50))
