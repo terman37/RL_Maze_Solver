@@ -11,19 +11,20 @@ class Agent():
     def __init__(self, maze):
         lr = 0.001
         num_actions = maze.numActions
-        init = initializers.RandomUniform(minval=-0.01, maxval=0.01)
+        init = initializers.RandomUniform(minval=-0.001, maxval=0.001)
         model = Sequential()
         model.add(Flatten(input_shape=(maze.freeCellsState.shape[1],)))
-        model.add(Dense(64,
+        model.add(Dense(maze.maze.size,
                         kernel_initializer=init,
                         activation='relu'))
         # model.add(Dense(32,
         #                 kernel_initializer=init,
         #                 activation='relu'))
         model.add(Dense(num_actions,
-                        kernel_initializer=init))
+                        kernel_initializer='zeros',
+                        activation='linear'))
 
-        model.compile(optimizer=Adam(learning_rate=lr), loss=MeanSquaredError())
+        model.compile(optimizer=Adam(learning_rate=lr), loss='mse')
         # print(model.summary())
         self.model = model
 

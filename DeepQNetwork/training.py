@@ -7,7 +7,7 @@ from DeepQNetwork.experience import Experience
 from DeepQNetwork.agent import Agent
 
 # Create Maze
-mazePath = '../maze_pictures/3x3maze.png'
+mazePath = '../maze_pictures/2x2maze.png'
 maze = Maze(mazePath)
 
 # initialize Experience
@@ -22,7 +22,7 @@ maxEpochs = 100
 agent = Agent(maze)
 target_agent = Agent(maze)
 target_agent.model.set_weights(agent.model.get_weights())
-BS = 64
+BS = 8
 
 # training
 maze.initDisplay()
@@ -58,7 +58,7 @@ while epoch < maxEpochs:
             experience.remember([currentEnvState, direction, reward, nextEnvState, status, possibleDirs])
             nbmoves += 1
 
-        if (nbmoves % 8 == 0 or maze.status != 0):
+        if (nbmoves % 8 == 0 or maze.status != 0) and len(experience.memory) > BS:
             batch = experience.createBatch(BatchSize=BS)
 
             currentStates = np.array([mem[0][0] for mem in batch])
@@ -73,20 +73,25 @@ while epoch < maxEpochs:
                     maxQ, _ = agent.get_max(possibleDirs, nextTargets[idx])
                     currentTargets[idx, direction] = reward + discount * maxQ
 
-            history = agent.model.fit(currentStates, currentTargets, epochs=32, batch_size=16, verbose=0)
+                history = agent.model.fit(x=currentStates[idx].reshape(1,-1),
+                                          y=currentTargets[idx].reshape(1,-1),
+                                          epochs=8,
+                                          verbose=0)
 
         if target_update_counter % 1 == 0:
             target_agent.model.set_weights(agent.model.get_weights())
 
         currentEnvState = nextEnvState
 
+    w = maze.watch_all_free_cells()
+    q = np.round(agent.model.predict(w), 2)
+    q = [list(i) for i in q]
+
+    for i in zip(w.tolist(), q):
+        print(i)
+
     print('Epoch: %d, epsilon: %.5f, nb moves: %d, totReward: %.2f, Win: %d, duration: %.2f'
           % (epoch, epsilon, nbmoves, totalReward, maze.status, time()-t0))
-
-    pos1 = (1,3)
-    watch1 = np.array(pos1).reshape(1, -1)
-    q = agent.predict_qvalues(watch1)
-    print("position ", pos1," -> ", q[0])
 
     epsilon = np.exp(np.log(minEpsilon)/maxEpochs * epoch)
 

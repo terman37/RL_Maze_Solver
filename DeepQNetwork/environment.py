@@ -81,15 +81,15 @@ class Maze():
         elif self.maze[row, col] == WALL:
             reward = -0.75
         elif self.maze[row, col] == FREE:
-            reward = 0
+            reward = -0.03
         elif self.maze[row, col] == VISITED:
             reward = -0.25
         elif self.maze[row, col] == FINISH:
-            reward = 100
+            reward = 1
             self.status = WIN
 
         if len(self.getPossibleDirections(position)) == 0 and self.status != WIN:
-            reward = -100
+            reward = -1
             self.status = LOSE
 
         return reward
@@ -127,6 +127,14 @@ class Maze():
         #             freeCells.append(self.maze[row, col])
         # return np.array(freeCells).reshape(1, -1)
         return np.array(self.currentPos).reshape(1, -1)
+
+    def watch_all_free_cells(self):
+        freeCells = list()
+        for row in range(self.mazeRowNb):
+            for col in range(self.mazeColNb):
+                if self.maze[row, col] != WALL:
+                    freeCells.append(np.array([row, col]))
+        return np.array(freeCells).reshape(len(freeCells), -1)
 
     def initDisplay(self):
         # reshape factor to avoid app bigger than screen
