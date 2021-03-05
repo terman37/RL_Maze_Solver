@@ -4,10 +4,12 @@ import pygame as pg
 
 
 UP, DOWN, LEFT, RIGHT = 0, 1, 2, 3
+POUT, PWALL, PVISITED, PFREE, PFINISH, PLOSE = -0.8, -0.75, -0.25, -0.01, 1, -1
 ONGOING, WIN, LOSE = 0, 1, 2
 
-WALL, FREE, VISITED, FINISH, CURRENTPOS = 0, 1, 2, 3, 4
-MAZE_COLORS = np.array([[0,0,0], [255,255,255], [127,255,255], [0,255,0], [0,0,255]])
+WALL, FREE, VISITED, FINISH, CURRENTPOS = 0, 1, 0.25, 0.5, 0.75
+CWALL, CFREE, CVISITED, CFINISH, CCURRENTPOS = [0, 0, 0], [255, 255, 255], [127, 255, 255], [0, 255, 0], [0, 0, 255]
+# CWALL, CFREE, CVISITED, CFINISH, CCURRENTPOS = 0x0000000, 0xffffff00, 0x7fffff00, 0x00ff0000, 0x0000ff00
 
 
 class Maze():
@@ -38,7 +40,8 @@ class Maze():
         self.startPos = (0, mazeArray[0].nonzero()[0][0])
         self.finishPos = (mazeArray.shape[0]-1, mazeArray[-1].nonzero()[0][0])
         mazeArray[self.finishPos] = FINISH
-        self._maze = mazeArray.astype('int32')
+        self._maze = mazeArray.astype('float32')
+        # self._maze = mazeArray
 
     def reset(self, startPosition: tuple) -> None:
         self.maze = np.copy(self._maze)
@@ -77,19 +80,19 @@ class Maze():
         row, col = position
 
         if row < 0 or row >= self.mazeRowNb or col < 0 or col >= self.mazeColNb:  # OUT OF MAZE
-            reward = -0.9
+            reward = POUT
         elif self.maze[row, col] == WALL:
-            reward = -0.75
+            reward = PWALL
         elif self.maze[row, col] == FREE:
-            reward = -0.03
+            reward = PFREE
         elif self.maze[row, col] == VISITED:
-            reward = -0.25
+            reward = PVISITED
         elif self.maze[row, col] == FINISH:
-            reward = 1
+            reward = PFINISH
             self.status = WIN
 
         if len(self.getPossibleDirections(position)) == 0 and self.status != WIN:
-            reward = -1
+            reward = PLOSE
             self.status = LOSE
 
         return reward
@@ -120,21 +123,16 @@ class Maze():
         self.maze[position] = CURRENTPOS
 
     def getStateFreeCells(self):
-        # freeCells = list()
-        # for row in range(self.mazeRowNb):
-        #     for col in range(self.mazeColNb):
-        #         if self.maze[row, col] != WALL:
-        #             freeCells.append(self.maze[row, col])
-        # return np.array(freeCells).reshape(1, -1)
-        return np.array(self.currentPos).reshape(1, -1)
-
-    def watch_all_free_cells(self):
         freeCells = list()
         for row in range(self.mazeRowNb):
             for col in range(self.mazeColNb):
                 if self.maze[row, col] != WALL:
-                    freeCells.append(np.array([row, col]))
-        return np.array(freeCells).reshape(len(freeCells), -1)
+                    if self.maze[row, col] == CURRENTPOS:
+                        freeCells.append(1)
+                    else:
+                        freeCells.append(0)
+
+        return np.asarray(freeCells).reshape(1, -1)
 
     def initDisplay(self):
         # reshape factor to avoid app bigger than screen
@@ -155,7 +153,17 @@ class Maze():
         pg.display.flip()
 
     def displayMaze(self):
-        surface = pg.surfarray.make_surface(MAZE_COLORS[np.transpose(self.maze)])
+        mazeDisp = np.copy(np.transpose(self.maze))
+
+        mazeDispColors = np.zeros((mazeDisp.shape[0], mazeDisp.shape[1], 3))
+        mazeDispColors[mazeDisp == WALL] = CWALL
+        mazeDispColors[mazeDisp == FREE] = CFREE
+        mazeDispColors[mazeDisp == VISITED] = CVISITED
+        mazeDispColors[mazeDisp == CURRENTPOS] = CCURRENTPOS
+        mazeDispColors[mazeDisp == FINISH] = CFINISH
+
+        surface = pg.surfarray.make_surface(mazeDispColors)
+
         surface = pg.transform.scale(surface, tuple(int(i * self.rFactor) for i in self.originalImgSize))
         self.screen.blit(surface, (50, 50))
 
@@ -171,7 +179,7 @@ class Maze():
         # refresh
         pg.display.flip()
 
-    def display_move(self):
+    def display_move(self, waitTime=200):
         self.displayMaze()
-        pg.time.wait(100)
+        pg.time.wait(waitTime)
         pg.event.pump()

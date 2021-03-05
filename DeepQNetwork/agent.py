@@ -2,7 +2,6 @@ import numpy as np
 
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
-from keras.losses import MeanSquaredError
 from keras.optimizers import Adam
 from keras import initializers
 
@@ -11,7 +10,8 @@ class Agent():
     def __init__(self, maze):
         lr = 0.001
         num_actions = maze.numActions
-        init = initializers.RandomUniform(minval=-0.001, maxval=0.001)
+        # init = initializers.RandomUniform(minval=-0.001, maxval=0.001)
+        init = initializers.HeUniform()
         model = Sequential()
         model.add(Flatten(input_shape=(maze.freeCellsState.shape[1],)))
         model.add(Dense(maze.maze.size,
@@ -34,5 +34,6 @@ class Agent():
     def get_max(self, possibleDirs, qvalues):
         qvalues = qvalues
         maxQ = np.max(qvalues[possibleDirs])
-        direction = np.where(qvalues == maxQ)[0][0]
+        dirMaxQ = np.where(qvalues == maxQ)[0]
+        direction = np.intersect1d(dirMaxQ, possibleDirs)[0]
         return maxQ, direction
