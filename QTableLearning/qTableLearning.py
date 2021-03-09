@@ -71,36 +71,39 @@ def training(epochsNb, maze, rb):
     return qTable
 
 
-# Cmd line arguments
-parser = argparse.ArgumentParser()
-parser.add_argument('--mazefilepath', type=str, default='../maze_pictures/20x20maze.png', help='path to maze file')
-args = parser.parse_args()
+if __name__ == "__main__":
 
-# Load Environment
-mazePath = args.mazefilepath
-env = Environment(mazePath)
-env.displayMaze()
+    # Cmd line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mazefilepath', type=str, default='../maze_pictures/20x20maze2.png', help='path to maze file')
+    parser.add_argument('--nbepochs', type=int, default=10000000, help='nb of training epochs')
+    args = parser.parse_args()
 
-# Training
-env.displayText('Training...')
-tstart = time()
-rewardBoard = initRewardBoard(env.maze)
-qTable = training(epochsNb=10000000, maze=env.maze, rb=rewardBoard)
-tfinish = time()
-print("Training Duration %.2f secs" % (tfinish-tstart))
+    # Load Environment
+    mazePath = args.mazefilepath
+    env = Environment(mazePath)
+    env.displayMaze()
 
-# Showing solution
-env.displayText('Showing solution')
+    # Training
+    env.displayText('Training...')
+    tstart = time()
+    rewardBoard = initRewardBoard(env.maze)
+    qTable = training(epochsNb=args.nbepochs, maze=env.maze, rb=rewardBoard)
+    tfinish = time()
+    print("Training Duration %.2f secs" % (tfinish-tstart))
 
-currentPos = env.startPos
-env.displayMove(currentPos)
+    # Showing solution
+    env.displayText('Showing solution')
 
-running = True
-while running:
-    if currentPos != env.finishPos:
-        direction = np.argmax(np.where(qTable[currentPos] != 0, qTable[currentPos], -np.inf))
-        currentPos = getDestination(currentPos, direction)
-        env.displayMove(currentPos)
-    else:
-        env.displayText('Tada !')
-        running = env.wait_and_quit()
+    currentPos = env.startPos
+    env.displayMove(currentPos)
+
+    running = True
+    while running:
+        if currentPos != env.finishPos:
+            direction = np.argmax(np.where(qTable[currentPos] != 0, qTable[currentPos], -np.inf))
+            currentPos = getDestination(currentPos, direction)
+            env.displayMove(currentPos)
+        else:
+            env.displayText('Tada !')
+            running = env.wait_and_quit()
