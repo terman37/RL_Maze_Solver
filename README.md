@@ -40,7 +40,9 @@ and derived from it the QValues (value of an action) update equation
 
 ![](pictures/Qlearning.png)
 
-### Pseudo code
+### My Code
+
+#### Pseudo code
 
 ```
 # Training
@@ -63,18 +65,18 @@ repeat until reaching the end:
 
 
 
-### MyCode
+#### Implementation
+
+
 
 Code is composed of 2 files:
 
 - environment.py: to create the maze from the png and manage the display using pygame
 - qTableLearning.py: actually creating the Qtable, updating it through training, and playing the result.
 
+Libraries:
 
-
-### Libraries used:
-
-- pygame: for visual rendering
+- Pygame: for visual rendering
 
 - Pillow for initial png transformations
 
@@ -86,7 +88,7 @@ Code is composed of 2 files:
 
 ### Results and Limitations
 
-If repeating enough times during the training phase, algorithm works quite well.
+If repeating enough times during the training phase, algorithm do the job.
 
 I've been able to solve 20x20 maze within 5 seconds training.
 
@@ -102,4 +104,6 @@ python qTablelearning.py --mazefilepath <PATH TO MAZE PNG>
 
 
 
-But size of the maze is quickly limiting the algorithm. I've not been able to solve a 50x50 maze within acceptable amount of time.
+**But** size of the maze is quickly limiting the algorithm. 
+
+I've not been able to solve a 50x50 maze within acceptable amount of time.
